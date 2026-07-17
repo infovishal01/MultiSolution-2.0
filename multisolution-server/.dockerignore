@@ -1,0 +1,13 @@
+node_modules
+npm-debug.log
+.git
+.gitignore
+.env
+.env.*
+*.md
+*.ts
+*.tsx
+!*.js
+Dockerfile
+.dockerignore
+.gitignore

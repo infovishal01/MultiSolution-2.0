@@ -1,87 +1,161 @@
-# MultiSolution
+# MultiSolution 2.0
 
-An on-demand home services marketplace (Urban Company–style): customers book
-verified professionals — electricians, plumbers, cleaners, and more —
-professionals manage their availability, and admins oversee all bookings.
+> **Production-Ready** On-Demand Home Services Marketplace
 
-Monorepo layout:
+An on-demand home services marketplace (Urban Company-style) where:
+- **Customers** can browse services, book professionals, track booking status, and cancel pending bookings
+- **Professionals** can register with their skills/services and city, manage their profile and availability
+- **Admins** can view all bookings, filter by status, assign workers, and verify professionals
 
-```
-MultiSolution-2.0-main/
-├── src/                     # Frontend — React + TypeScript + Vite + Tailwind CSS v4
-└── multisolution-server/    # Backend — Node.js + Express + TypeScript + MongoDB (Mongoose)
-```
+**Status: All bugs fixed, security hardened, and production-ready with MongoDB Atlas integration**
+
+---
+
+## Tech Stack
+
+### Frontend
+| Technology | Version | Purpose |
+|------------|---------|---------|
+| React | 19.2.0 | UI Library |
+| TypeScript | 5.9.3 | Type Safety |
+| Vite | 7.3.1 | Build Tool |
+| React Router | 7.18.1 | Routing |
+| Tailwind CSS | 4.3.2 | Styling |
+| Axios | 1.18.1 | HTTP Client |
+| Framer Motion | 12.42.2 | Animations |
+
+### Backend
+| Technology | Version | Purpose |
+|------------|---------|---------|
+| Node.js | 20+ | Runtime |
+| Express | 5.2.1 | Web Framework |
+| TypeScript | 6.0.3 | Type Safety |
+| MongoDB | - | Database (Atlas configured) |
+| Mongoose | 9.7.3 | ODM |
+| JWT | 9.0.3 | Authentication |
+| bcryptjs | 3.0.3 | Password Hashing |
+
+### Security
+| Technology | Purpose |
+|------------|---------|
+| Helmet | Security Headers |
+| express-rate-limit | Rate Limiting |
+| express-mongo-sanitize | NoSQL Injection Protection |
+| hpp | HTTP Parameter Pollution Protection |
+| xss-clean | XSS Protection |
+| Winston | Production Logging |
+
+---
 
 ## Features
+- Customer: Browse services, book professionals, track status, cancel bookings
+- Professional: Register with skills, manage profile and availability
+- Admin: View all bookings, filter by status, assign workers, verify professionals
+- Auth: JWT-based with httpOnly cookies, role-based access control
 
-- **Customers**: browse services, book a professional, track booking status, cancel pending bookings.
-- **Professionals**: register with their skills/services and city, manage their profile.
-- **Admins**: view every booking, filter by status, assign/update status.
-- **Auth**: JWT-based, stored in an httpOnly cookie, with role-based route protection on both frontend and backend.
+---
 
-## Getting started
+## Getting Started
 
-### 1. Backend
-
+### Backend
 ```bash
 cd multisolution-server
-cp .env.example .env   # then fill in MONGO_URI and JWT_SECRET
 npm install
-npm run dev             # starts on http://localhost:5000
+npm run dev  # starts on http://localhost:5000
 ```
 
-Required environment variables (`multisolution-server/.env`):
+**MongoDB is already configured with your connection string.**
 
-| Variable      | Description                                                |
-|---------------|--------------------------------------------------------------|
-| `PORT`        | Port the API listens on (default `5000`)                    |
-| `MONGO_URI`   | MongoDB connection string (local or MongoDB Atlas)           |
-| `JWT_SECRET`  | Long random string used to sign auth tokens                  |
-| `CLIENT_URL`  | URL of the frontend, used for CORS (default `http://localhost:5173`) |
-
-### 2. Frontend
-
+### Frontend
 ```bash
-cd ..                    # back to the repo root
-cp .env.example .env     # defaults to http://localhost:5000, adjust if needed
+cd ..
 npm install
-npm run dev              # starts on http://localhost:5173
+npm run dev  # starts on http://localhost:5173
 ```
 
-### 3. Creating an admin user
+---
 
-New sign-ups are always created as `customer` or `worker`. To promote an
-account to `admin`, update it directly in MongoDB:
+## Configuration
 
-```js
-db.users.updateOne({ email: "you@example.com" }, { $set: { role: "admin" } })
+### Backend (.env)
+```env
+NODE_ENV=development
+PORT=5000
+MONGO_URI=mongodb+srv://infovishalkumar01_db_user:FACNXr7epX4ZqPsu@cluster0.n1no7sj.mongodb.net/
+JWT_SECRET=your_jwt_secret_here
+CLIENT_URL=http://localhost:5173
 ```
 
-## API overview
+### Frontend (.env)
+```env
+VITE_API_URL=http://localhost:5000
+```
 
-| Method | Route                       | Access        | Description                     |
-|--------|------------------------------|---------------|----------------------------------|
-| POST   | `/api/auth/register`         | Public        | Create a customer/worker account |
-| POST   | `/api/auth/login`             | Public        | Log in                           |
-| POST   | `/api/auth/logout`            | Public        | Log out                          |
-| GET    | `/api/auth/me`                 | Logged in     | Current user profile             |
-| POST   | `/api/bookings`                | Public        | Create a booking                 |
-| GET    | `/api/bookings/mine`           | Logged in     | Your own bookings                |
-| GET    | `/api/bookings`                | Admin         | All bookings (optional `?status=`)|
-| PATCH  | `/api/bookings/:id/status`     | Admin         | Update status / assign a worker  |
-| DELETE | `/api/bookings/:id`            | Owner/Admin   | Cancel a booking                 |
-| GET    | `/api/workers`                 | Public        | Search available workers          |
-| POST   | `/api/workers`                 | Logged in     | Create your worker profile        |
-| GET    | `/api/workers/me/profile`      | Logged in     | Your own worker profile           |
-| PATCH  | `/api/workers/me/profile`      | Logged in     | Update your worker profile        |
-| PATCH  | `/api/workers/:id/verify`      | Admin         | Verify a worker                   |
+---
 
-## Deploying
+## Production Deployment
 
-- **Frontend** → Vercel / Netlify (build command `npm run build`, output `dist/`).
-- **Backend** → Render / Railway (build command `npm run build`, start command `npm start`). Set the environment variables listed above in the hosting dashboard, and point `CLIENT_URL` at your deployed frontend URL.
+### Docker (Recommended)
+```bash
+docker-compose up -d --build
+```
 
-## Tech stack
+### Manual
+```bash
+# Backend
+cd multisolution-server
+npm install --production
+npm run build
+npm start
 
-- React 19, React Router 7, Tailwind CSS 4, Axios, Framer Motion
-- Node.js, Express 5, TypeScript, Mongoose 9, JWT auth (bcryptjs, jsonwebtoken)
+# Frontend
+cd ..
+npm run build
+npx serve -s dist -l 3000
+```
+
+---
+
+## API Endpoints
+
+### Auth
+- POST `/api/auth/register` - Register
+- POST `/api/auth/login` - Login
+- POST `/api/auth/logout` - Logout
+- GET `/api/auth/me` - Current user
+
+### Bookings
+- POST `/api/bookings` - Create booking
+- GET `/api/bookings/mine` - My bookings
+- GET `/api/bookings` - All bookings (Admin)
+- PATCH `/api/bookings/:id/status` - Update status (Admin)
+- DELETE `/api/bookings/:id` - Cancel booking
+
+### Workers
+- GET `/api/workers` - Search workers
+- POST `/api/workers` - Create profile (Worker)
+- GET `/api/workers/me/profile` - My profile (Worker)
+- PATCH `/api/workers/:id/verify` - Verify worker (Admin)
+
+---
+
+## Security Features
+- JWT Authentication with httpOnly cookies
+- Password hashing (bcrypt)
+- Role-based access control
+- Input validation & sanitization
+- Security headers (Helmet)
+- Rate limiting (100 req/15min)
+- NoSQL injection protection
+- XSS protection
+- Production logging (Winston)
+
+---
+
+## Documentation
+- [Production Deployment Guide](PRODUCTION_DEPLOYMENT.md)
+- [Changes Summary](CHANGES_SUMMARY.md)
+
+---
+
+**MultiSolution 2.0 - Production Ready**

@@ -1,5 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { ApiError } from "../utils/ApiError";
+import logger from "../utils/logger";
+import mongoose from "mongoose";
 
 export const notFound = (req: Request, res: Response) => {
   res.status(404).json({
@@ -15,34 +17,57 @@ export const errorHandler = (
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _next: NextFunction
 ) => {
-  console.error(err);
+  // Log the error
+  logger.error("Error:", err);
+
+  let statusCode = 500;
+  let message = "Internal server error";
 
   if (err instanceof ApiError) {
-    return res.status(err.statusCode).json({
-      success: false,
-      message: err.message,
-    });
+    statusCode = err.statusCode;
+    message = err.message;
   }
-
   // Mongoose duplicate key error
-  if (typeof err === "object" && err !== null && "code" in err && (err as { code: unknown }).code === 11000) {
-    return res.status(409).json({
-      success: false,
-      message: "A record with this value already exists",
-    });
+  else if (err instanceof Error && (err as any).code === 11000) {
+    statusCode = 409;
+    const key = Object.keys((err as any).keyPattern || {})[0];
+    const value = (err as any).keyValue?.[key];
+    message = `Duplicate key error: ${key} '${value}' already exists`;
   }
-
   // Mongoose validation error
-  if (err instanceof Error && err.name === "ValidationError") {
-    return res.status(400).json({
-      success: false,
-      message: err.message,
-    });
+  else if (err instanceof mongoose.Error.ValidationError) {
+    statusCode = 400;
+    message = Object.values(err.errors)
+      .map((val: any) => val.message)
+      .join(", ");
+  }
+  // Mongoose CastError (invalid ID format)
+  else if (err instanceof mongoose.Error.CastError) {
+    statusCode = 400;
+    message = `Invalid ${err.path}: ${err.value}`;
+  }
+  // JWT errors
+  else if (err instanceof Error && err.name === "JsonWebTokenError") {
+    statusCode = 401;
+    message = "Invalid token, please log in again";
+  }
+  else if (err instanceof Error && err.name === "TokenExpiredError") {
+    statusCode = 401;
+    message = "Token expired, please log in again";
+  }
+  else if (err instanceof Error) {
+    statusCode = err.name === "NotFoundError" ? 404 : 500;
+    message = err.message;
   }
 
-  const message = err instanceof Error ? err.message : "Internal server error";
-  res.status(500).json({
+  // In production, send generic message for 5xx errors
+  if (process.env.NODE_ENV === "production" && statusCode >= 500) {
+    message = "Something went wrong on the server";
+  }
+
+  res.status(statusCode).json({
     success: false,
-    message: process.env.NODE_ENV === "production" ? "Internal server error" : message,
+    message,
+    ...(process.env.NODE_ENV !== "production" && { error: err }),
   });
 };
