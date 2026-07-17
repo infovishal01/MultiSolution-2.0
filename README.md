@@ -81,7 +81,7 @@ npm run dev  # starts on http://localhost:5173
 ```env
 NODE_ENV=development
 PORT=5000
-MONGO_URI=mongodb+srv://infovishalkumar01_db_user:FACNXr7epX4ZqPsu@cluster0.n1no7sj.mongodb.net/
+MONGO_URI=mongodb+srv://infovishalkumar01_db_user:@cluster0.n1no7sj.mongodb.net/
 JWT_SECRET=your_jwt_secret_here
 CLIENT_URL=http://localhost:5173
 ```
